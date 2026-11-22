@@ -1,0 +1,40 @@
+
+name: Build LampuWidget APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'LampuWidget-AndroidStudio.zip'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Extract project
+        run: unzip -o LampuWidget-AndroidStudio.zip
+
+      - name: Build APK
+        run: gradle -p LampuWidget :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LampuWidget-APK
+          path: LampuWidget/app/build/outputs/apk/debug/app-debug.apk
