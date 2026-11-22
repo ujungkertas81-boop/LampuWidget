@@ -26,10 +26,24 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
+
       - name: Extract project
         run: unzip -o LampuWidget-AndroidStudio.zip
-      - name: Fix widget description
-        run: sed -i '/android:description=/d' LampuWidget/app/src/main/res/xml/lamp_widget_info.xml 
+
+      - name: Fix widget XML
+        run: |
+          cat > LampuWidget/app/src/main/res/xml/lamp_widget_info.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <appwidget-provider
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:minWidth="180dp"
+              android:minHeight="110dp"
+              android:updatePeriodMillis="0"
+              android:initialLayout="@layout/widget_lamp"
+              android:resizeMode="horizontal|vertical"
+              android:widgetCategory="home_screen" />
+          EOF
+
       - name: Build APK
         run: gradle -p LampuWidget :app:assembleDebug
 
