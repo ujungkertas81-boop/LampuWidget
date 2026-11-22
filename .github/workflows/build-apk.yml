@@ -1,4 +1,3 @@
-
 name: Build LampuWidget APK
 
 on:
@@ -16,18 +15,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup JDK
+      - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Extract project
+      - name: Extract Android project
         run: unzip -o LampuWidget-AndroidStudio.zip
 
       - name: Fix widget XML
@@ -44,11 +43,47 @@ jobs:
               android:widgetCategory="home_screen" />
           EOF
 
-      - name: Build APK
+      - name: Set Java and Kotlin JVM target to 17
+        run: |
+          cat > LampuWidget/app/build.gradle.kts <<'EOF'
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+
+          android {
+              namespace = "com.arul.lampuwidget"
+              compileSdk = 35
+
+              defaultConfig {
+                  applicationId = "com.arul.lampuwidget"
+                  minSdk = 23
+                  targetSdk = 35
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+
+          dependencies {
+              implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
+          }
+          EOF
+
+      - name: Build debug APK
         run: gradle -p LampuWidget :app:assembleDebug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: LampuWidget-APK
           path: LampuWidget/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
